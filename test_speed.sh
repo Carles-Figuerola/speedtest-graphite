@@ -20,6 +20,7 @@ METRIC_PREFIX=${METRIC_PREFIX:-internet}
 TIME=`date +%s`
 RESULT_FILE=$(mktemp "$(pwd)/result.XXXXXXXX")
 
+echo "Starting Speedtest"
 SERVER_ID=$(speedtest -L | grep -E '[0-9]{3,6}' | awk '{print $1}' | shuf -n 1)
 timeout 300 speedtest -s ${SERVER_ID} --format=json | tee $RESULT_FILE
 
@@ -35,13 +36,13 @@ upload=$(cat $RESULT_FILE | jq .upload.bandwidth)
 
 if [[ "${GRAPHITE_ENABLE}" == "true" ]] ; then
   echo "Sending to $GRAPHITE_HOST:$GRAPHITE_PORT:"
-  echo "$GRAPHITE_PREFIX.ping $ping $TIME"
-  echo "$GRAPHITE_PREFIX.download $(( $download * 8 )) $TIME"
-  echo "$GRAPHITE_PREFIX.upload $(( $upload * 8 )) $TIME"
+  echo "$METRIC_PREFIX.ping $ping $TIME"
+  echo "$METRIC_PREFIX.download $(( $download * 8 )) $TIME"
+  echo "$METRIC_PREFIX.upload $(( $upload * 8 )) $TIME"
 
-  echo "$GRAPHITE_PREFIX.ping $ping $TIME" | nc -w5 $GRAPHITE_HOST $GRAPHITE_PORT
-  echo "$GRAPHITE_PREFIX.download $(( $download * 8 )) $TIME" | nc -w5 $GRAPHITE_HOST $GRAPHITE_PORT
-  echo "$GRAPHITE_PREFIX.upload $(( $upload * 8 )) $TIME" | nc -w5 $GRAPHITE_HOST $GRAPHITE_PORT
+  echo "$METRIC_PREFIX.ping $ping $TIME" | nc -w5 $GRAPHITE_HOST $GRAPHITE_PORT
+  echo "$METRIC_PREFIX.download $(( $download * 8 )) $TIME" | nc -w5 $GRAPHITE_HOST $GRAPHITE_PORT
+  echo "$METRIC_PREFIX.upload $(( $upload * 8 )) $TIME" | nc -w5 $GRAPHITE_HOST $GRAPHITE_PORT
 fi
 
 if [[ "${INFLUXDB_ENABLE}" == "true" ]] ; then
