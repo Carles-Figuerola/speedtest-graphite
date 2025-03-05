@@ -31,14 +31,16 @@ fi
 
 ping=$(cat $RESULT_FILE | jq .ping.latency)
 download=$(cat $RESULT_FILE | jq .download.bandwidth)
+download=$(( $download * 8 ))
 upload=$(cat $RESULT_FILE | jq .upload.bandwidth)
+upload=$(( $upload * 8 ))
 
 
 if [[ "${GRAPHITE_ENABLE}" == "true" ]] ; then
   echo "Sending to $GRAPHITE_HOST:$GRAPHITE_PORT:"
   echo "$METRIC_PREFIX.ping $ping $TIME"
-  echo "$METRIC_PREFIX.download $(( $download * 8 )) $TIME"
-  echo "$METRIC_PREFIX.upload $(( $upload * 8 )) $TIME"
+  echo "$METRIC_PREFIX.download $download $TIME"
+  echo "$METRIC_PREFIX.upload $upload $TIME"
 
   echo "$METRIC_PREFIX.ping $ping $TIME" | nc -w5 $GRAPHITE_HOST $GRAPHITE_PORT
   echo "$METRIC_PREFIX.download $(( $download * 8 )) $TIME" | nc -w5 $GRAPHITE_HOST $GRAPHITE_PORT
